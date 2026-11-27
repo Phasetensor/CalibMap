@@ -1,9 +1,12 @@
 """Uncertainty propagation under explicitly supplied calibration assumptions."""
 
 from __future__ import annotations
+
 from typing import Callable
+
 import numpy as np
 from scipy.stats import beta
+
 from .readout import Binary, delta, interval
 
 
@@ -14,11 +17,11 @@ def posterior(
     if len(prior) != 2 or not all(0 < x < np.inf for x in prior):
         raise ValueError("Positive finite beta prior required")
     a, b = k + prior[0], n - k + prior[1]
-    return dict(
-        shape=(a, b),
-        mean=a / (a + b),
-        credible=tuple(beta.ppf([alpha / 2, 1 - alpha / 2], a, b)),
-    )
+    return {
+        "shape": (a, b),
+        "mean": a / (a + b),
+        "credible": tuple(beta.ppf([alpha / 2, 1 - alpha / 2], a, b)),
+    }
 
 
 def corrected_variance(

@@ -1,14 +1,16 @@
 """Portable records, provider imports and deterministic reports."""
 
 from __future__ import annotations
+
 import csv
 import hashlib
 import html
 import io
 import json
+from collections.abc import Iterable
 from dataclasses import asdict, replace
 from datetime import datetime
-from typing import Iterable
+
 from . import Record
 
 

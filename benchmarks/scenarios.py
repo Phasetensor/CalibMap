@@ -38,17 +38,17 @@ for label, shift in {
     cuts = [segments(x, 12) for x in paths[:200]]
     locations = [min(abs(c - 20) for c in cut) for cut in cuts if cut]
     ci = binomtest(int(hit.sum()), len(hit)).proportion_ci()
-    scenarios[label] = dict(
-        eligible=int(eligible.sum()),
-        early_alarms=int((~eligible).sum()),
-        missed=int((~hit).sum()),
-        conditional_detection=float(hit.mean()),
-        ci=list(ci),
-        mean_delay=float(post[hit].argmax(axis=1).mean()) if hit.any() else None,
-        segmented_paths=sum(bool(c) for c in cuts),
-        segmentation_total=len(cuts),
-        nearest_boundary_error=float(np.mean(locations)) if locations else None,
-    )
+    scenarios[label] = {
+        "eligible": int(eligible.sum()),
+        "early_alarms": int((~eligible).sum()),
+        "missed": int((~hit).sum()),
+        "conditional_detection": float(hit.mean()),
+        "ci": list(ci),
+        "mean_delay": float(post[hit].argmax(axis=1).mean()) if hit.any() else None,
+        "segmented_paths": sum(bool(c) for c in cuts),
+        "segmentation_total": len(cuts),
+        "nearest_boundary_error": float(np.mean(locations)) if locations else None,
+    }
 results["drift"] = scenarios
 forecasts = {}
 for name in ("stationary", "drift", "shift"):
@@ -76,14 +76,16 @@ for name in ("stationary", "drift", "shift"):
             covered.append(lo <= series[k] <= hi)
             widths.append(hi - lo)
     forecasts[name] = {
-        k: dict(
-            mae=float(np.mean(np.abs(v))), rmse=float(np.sqrt(np.mean(np.square(v))))
-        )
+        k: {
+            "mae": float(np.mean(np.abs(v))),
+            "rmse": float(np.sqrt(np.mean(np.square(v)))),
+        }
         for k, v in errors.items()
     }
-    forecasts[name]["future_observation_interval"] = dict(
-        coverage=float(np.mean(covered)), mean_width=float(np.mean(widths))
-    )
+    forecasts[name]["future_observation_interval"] = {
+        "coverage": float(np.mean(covered)),
+        "mean_width": float(np.mean(widths)),
+    }
 results["forecast"] = forecasts
 point = np.array([0.44, 0.12, 0.21])
 cov = np.array([[3.0, 1.0, -0.2], [1.0, 2.0, 0.6], [-0.2, 0.6, 1.0]]) * 1e-6
@@ -95,12 +97,12 @@ def correction(x):
 
 draws = propagate(correction, point, cov, 10000, 1047)
 model = Binary(*point[1:])
-results["readout"] = dict(
-    replicates=len(draws),
-    known_variance=float(cov[0, 0] / model.contrast**2),
-    delta=corrected_variance(point[0], model, cov),
-    mc=float(draws.var(ddof=1)),
-    condition=float(np.linalg.cond(model.matrix)),
-    near_singular_condition=float(np.linalg.cond(Binary(0.49, 0.5099999).matrix)),
-)
+results["readout"] = {
+    "replicates": len(draws),
+    "known_variance": float(cov[0, 0] / model.contrast**2),
+    "delta": corrected_variance(point[0], model, cov),
+    "mc": float(draws.var(ddof=1)),
+    "condition": float(np.linalg.cond(model.matrix)),
+    "near_singular_condition": float(np.linalg.cond(Binary(0.49, 0.5099999).matrix)),
+}
 print(json.dumps(results, indent=2, allow_nan=False))

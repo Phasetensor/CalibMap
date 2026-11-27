@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from itertools import combinations
-from typing import Mapping, Iterable
 
 import numpy as np
 from scipy.stats import pearsonr
@@ -43,9 +43,13 @@ def dependence(series: Mapping[str, Mapping[float, float]]) -> dict:
     if np.isfinite(covariance).all():
         tolerance = 16 * np.finfo(float).eps * n * np.max(abs(covariance))
         psd = bool(np.linalg.eigvalsh(covariance).min() >= -tolerance)
-    return dict(
-        labels=labels, covariance=covariance, overlap=overlap, psd=psd, holm=adjusted
-    )
+    return {
+        "labels": labels,
+        "covariance": covariance,
+        "overlap": overlap,
+        "psd": psd,
+        "holm": adjusted,
+    }
 
 
 def components(

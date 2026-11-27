@@ -3,11 +3,11 @@ from datetime import timedelta
 from random import Random
 
 import pytest
+from test_history import HistoryTests as _Fixtures
 
 from calibmap import as_of
 from calibmap.history import stability, timelines
 from calibmap.planning import readiness
-from test_history import HistoryTests as _Fixtures
 
 base = _Fixtures.row
 del _Fixtures
@@ -64,16 +64,16 @@ def test_mixed_units_and_protocol():
 @pytest.mark.parametrize(
     "updates",
     [
-        dict(kind="unknown"),
-        dict(backend=""),
-        dict(qubits=(-1,)),
-        dict(qubits=(0, 0)),
-        dict(calibrated=None),
-        dict(published="invalid"),
-        dict(acquired=base.acquired.replace(tzinfo=None)),
-        dict(value=float("inf")),
-        dict(stderr=-1),
-        dict(sample_size=True),
+        {"kind": "unknown"},
+        {"backend": ""},
+        {"qubits": (-1,)},
+        {"qubits": (0, 0)},
+        {"calibrated": None},
+        {"published": "invalid"},
+        {"acquired": base.acquired.replace(tzinfo=None)},
+        {"value": float("inf")},
+        {"stderr": -1},
+        {"sample_size": True},
     ],
 )
 def test_invalid_record(updates):

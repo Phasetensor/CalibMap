@@ -1,12 +1,14 @@
 from datetime import timedelta
 from itertools import combinations
+
 import numpy as np
 import pytest
-from calibmap.records import load, export, normalize, fingerprint, ibm_properties
-from calibmap.series import segments, decay, correlation, describe, monitor
-from calibmap.readout import Binary, delta, interval
-from calibmap.planning import forecast, readiness, shortest_path, goodness
 from test_history import HistoryTests as _Fixtures
+
+from calibmap.planning import forecast, goodness, readiness, shortest_path
+from calibmap.readout import Binary, delta, interval
+from calibmap.records import export, fingerprint, ibm_properties, load, normalize
+from calibmap.series import correlation, decay, describe, monitor, segments
 
 row = _Fixtures.row
 del _Fixtures
@@ -24,8 +26,8 @@ def test_exhaustive_partition():
     for n in range(2, 10):
         x = rng.normal(size=n)
 
-        def objective(cuts):
-            groups = np.split(x, cuts)
+        def objective(cuts, sample=x):
+            groups = np.split(sample, cuts)
             return sum(((g - g.mean()) ** 2).sum() for g in groups) + 0.5 * len(cuts)
 
         candidates = [
@@ -90,18 +92,23 @@ def test_planning():
 def test_adapter():
     class Properties:
         def to_dict(self):
-            p = dict(name="T1", date=row.calibrated.isoformat(), unit="us", value=20)
-            return dict(
-                backend_name="synthetic",
-                qubits=[[p]],
-                gates=[
-                    dict(
-                        gate="cx",
-                        qubits=[1, 0],
-                        parameters=[dict(p, name="gate_length")],
-                    )
+            p = {
+                "name": "T1",
+                "date": row.calibrated.isoformat(),
+                "unit": "us",
+                "value": 20,
+            }
+            return {
+                "backend_name": "synthetic",
+                "qubits": [[p]],
+                "gates": [
+                    {
+                        "gate": "cx",
+                        "qubits": [1, 0],
+                        "parameters": [dict(p, name="gate_length")],
+                    }
                 ],
-            )
+            }
 
     a, b = ibm_properties(Properties(), row.acquired)
     assert a.value == pytest.approx(20e-6)

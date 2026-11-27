@@ -2,29 +2,29 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from math import isfinite
-from typing import Iterable, Optional, Tuple
 
 
 @dataclass(frozen=True)
 class Record:
     backend: str
     metric: str
-    qubits: Tuple[int, ...]
+    qubits: tuple[int, ...]
     calibrated: datetime
     acquired: datetime
-    published: Optional[datetime]
-    value: Optional[float]
+    published: datetime | None
+    value: float | None
     unit: str
     source: str
     kind: str
-    gate: Optional[str] = None
-    stderr: Optional[float] = None
-    sample_size: Optional[int] = None
+    gate: str | None = None
+    stderr: float | None = None
+    sample_size: int | None = None
 
-    protocol: Optional[str] = None
+    protocol: str | None = None
 
     def identity(self, unit: str) -> tuple:
         key = (
@@ -69,7 +69,7 @@ class Record:
             raise ValueError("Invalid sample size")
 
 
-def as_of(records: Iterable[Record], at: datetime) -> Tuple[Record, ...]:
+def as_of(records: Iterable[Record], at: datetime) -> tuple[Record, ...]:
     """Return latest observations available to the collector by the cutoff."""
     if at.utcoffset() is None:
         raise ValueError("Expected timezone-aware cutoff")

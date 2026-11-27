@@ -1,11 +1,14 @@
 """Calibrated graph, held-out noise diagnostics, forecasting and planning."""
 
 from __future__ import annotations
+
+from collections.abc import Iterable
 from datetime import datetime, timedelta
-from heapq import heappush, heappop
-from typing import Iterable
+from heapq import heappop, heappush
+
 import numpy as np
 from scipy.stats import chi2, norm
+
 from . import Record, as_of
 from .series import vector
 
@@ -60,9 +63,12 @@ def goodness(counts: np.ndarray, probabilities: np.ndarray) -> dict:
         pv = 0.0
     elif mask.sum() > 1 and min(expected[mask]) >= 5:
         pv = float(chi2.sf(stat, mask.sum() - 1))
-    return dict(
-        residual=residual.tolist(), statistic=stat, p_value=pv, impossible=impossible
-    )
+    return {
+        "residual": residual.tolist(),
+        "statistic": stat,
+        "p_value": pv,
+        "impossible": impossible,
+    }
 
 
 def forecast(

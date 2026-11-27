@@ -1,9 +1,12 @@
 """Grouped revision history and irregular-time diagnostics."""
 
 from __future__ import annotations
+
+from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Iterable
+
 import numpy as np
+
 from . import Record
 from .records import normalize
 from .series import describe
@@ -59,12 +62,12 @@ def stability(
                 selected[r.calibrated] = r
         values = [r.value for r in selected.values() if r.value is not None]
         epochs = list(selected)
-        result[key] = dict(
-            epochs=len(epochs),
-            missing=sum(r.value is None for r in selected.values()),
-            age_seconds=(at - rows[-1].calibrated).total_seconds(),
-            gaps=[(a, b) for a, b in zip(epochs, epochs[1:]) if b - a > gap],
-            standard_errors=[r.stderr for r in selected.values()],
-            statistics=describe(np.asarray(values)) if len(values) >= 2 else None,
-        )
+        result[key] = {
+            "epochs": len(epochs),
+            "missing": sum(r.value is None for r in selected.values()),
+            "age_seconds": (at - rows[-1].calibrated).total_seconds(),
+            "gaps": [(a, b) for a, b in zip(epochs, epochs[1:]) if b - a > gap],
+            "standard_errors": [r.stderr for r in selected.values()],
+            "statistics": describe(np.asarray(values)) if len(values) >= 2 else None,
+        }
     return result

@@ -1,9 +1,11 @@
 import csv
 import io
 import json
+
 import numpy as np
 import pytest
-from calibmap.diagnostics import dependence, components, candidates
+
+from calibmap.diagnostics import candidates, components, dependence
 from calibmap.reporting import Report
 
 
@@ -41,13 +43,13 @@ def test_connectivity():
 
 
 def test_report_formats():
-    args = dict(
-        definitions={},
-        assumptions=["<script>"],
-        missing=[],
-        parameters={"seed": 2},
-        results={"a": np.array([np.nan, np.inf]), "b": np.float32(2)},
-    )
+    args = {
+        "definitions": {},
+        "assumptions": ["<script>"],
+        "missing": [],
+        "parameters": {"seed": 2},
+        "results": {"a": np.array([np.nan, np.inf]), "b": np.float32(2)},
+    }
     report = Report.create([], **args)
     data = json.loads(report.render("json"))
     assert data["results"]["a"] == [{"undefined": "nan"}, {"undefined": "inf"}]

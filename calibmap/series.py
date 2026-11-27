@@ -1,7 +1,9 @@
 """Offline descriptive and monitoring statistics."""
 
 from __future__ import annotations
+
 from math import pi
+
 import numpy as np
 from scipy.optimize import curve_fit
 from scipy.stats import norm, pearsonr, spearmanr
@@ -17,14 +19,14 @@ def vector(values: np.ndarray, minimum: int = 1) -> np.ndarray:
 def describe(values: np.ndarray) -> dict[str, float]:
     x = vector(values, 2)
     median = np.median(x)
-    return dict(
-        mean=float(x.mean()),
-        median=float(median),
-        variance=float(x.var(ddof=1)),
-        mad=float(np.median(abs(x - median))),
-        q05=float(np.quantile(x, 0.05)),
-        q95=float(np.quantile(x, 0.95)),
-    )
+    return {
+        "mean": float(x.mean()),
+        "median": float(median),
+        "variance": float(x.var(ddof=1)),
+        "mad": float(np.median(abs(x - median))),
+        "q05": float(np.quantile(x, 0.05)),
+        "q95": float(np.quantile(x, 0.95)),
+    }
 
 
 def decay(times: np.ndarray, values: np.ndarray) -> tuple[float, float, float]:
@@ -112,8 +114,8 @@ def correlation(
     x, y = np.array(pairs).T
     if min(np.ptp(x), np.ptp(y)) == 0:
         raise ValueError("Constant matched series")
-    return dict(
-        overlap=len(x),
-        pearson=float(pearsonr(x, y)[0]),
-        spearman=float(spearmanr(x, y)[0]),
-    )
+    return {
+        "overlap": len(x),
+        "pearson": float(pearsonr(x, y)[0]),
+        "spearman": float(spearmanr(x, y)[0]),
+    }

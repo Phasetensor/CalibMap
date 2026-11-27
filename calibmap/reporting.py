@@ -1,14 +1,17 @@
 """Deterministic reports over calibration inputs and declared analysis results."""
 
 from __future__ import annotations
+
 import csv
-from dataclasses import dataclass
 import html
 import io
 import json
 import math
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
+
 import numpy as np
+
 from . import Record
 from .records import encode, fingerprint
 
@@ -47,17 +50,17 @@ class Report:
         parameters: Mapping,
     ) -> Report:
         rows = tuple(records)
-        data = dict(
-            version="0.1.0.dev0",
-            backends=sorted({r.backend for r in rows}),
-            records=[encode(r) for r in rows],
-            input_sha256=fingerprint(rows),
-            definitions=definitions,
-            assumptions=list(assumptions),
-            results=results,
-            missing=list(missing),
-            parameters=parameters,
-        )
+        data = {
+            "version": "0.1.0.dev0",
+            "backends": sorted({r.backend for r in rows}),
+            "records": [encode(r) for r in rows],
+            "input_sha256": fingerprint(rows),
+            "definitions": definitions,
+            "assumptions": list(assumptions),
+            "results": results,
+            "missing": list(missing),
+            "parameters": parameters,
+        }
         return cls(
             json.dumps(
                 _portable(data), allow_nan=False, sort_keys=True, separators=(",", ":")

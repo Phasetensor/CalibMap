@@ -1,9 +1,11 @@
 """Synthetic independent calibration, planning and held-out Z comparison."""
 
 import json
+
 import numpy as np
 from bornlens import Sample, compare
 from shotweave import Readout, optimal_allocation
+
 from calibmap.readout import Binary, interval
 
 rng = np.random.default_rng(512)
@@ -18,11 +20,11 @@ for q, channel in enumerate(channels):
     np.testing.assert_allclose(conditional, 0.25 * amplification)
     weights.append(np.sqrt(conditional))
     calibration.append(
-        dict(
-            qubit=q,
-            counts=counts,
-            simultaneous_intervals=[interval(x, 3000, 0.05 / 4) for x in counts],
-        )
+        {
+            "qubit": q,
+            "counts": counts,
+            "simultaneous_intervals": [interval(x, 3000, 0.05 / 4) for x in counts],
+        }
     )
 allocation = optimal_allocation(10000, weights)
 assert sum(allocation) == 10000
@@ -40,14 +42,14 @@ for q, (channel, n) in enumerate(zip(channels, allocation)):
     out.append(comparison.verdict)
 print(
     json.dumps(
-        dict(
-            seed=512,
-            evidence="synthetic",
-            physical_qubits=[0, 1],
-            allocation=allocation,
-            calibration=calibration,
-            held_out_observed_Z=out,
-        ),
+        {
+            "seed": 512,
+            "evidence": "synthetic",
+            "physical_qubits": [0, 1],
+            "allocation": allocation,
+            "calibration": calibration,
+            "held_out_observed_Z": out,
+        },
         indent=2,
     )
 )
