@@ -27,7 +27,10 @@ def propagate(transform: Callable, mean: np.ndarray,cov: np.ndarray,draws: int,s
     if mu.ndim!=1 or not np.isfinite(mu).all() or type(draws) is not int or draws<2:
         raise ValueError("Invalid mean or replicate count")
     delta(np.eye(len(mu)),cov)
-    samples=np.random.default_rng(seed).multivariate_normal(mu,cov,size=draws,check_valid="raise")
+    eigenvalues, axes = np.linalg.eigh(cov)
+    factor = axes * np.sqrt(np.maximum(eigenvalues, 0))
+    normals = np.random.default_rng(seed).standard_normal((draws, len(mu)))
+    samples = mu + np.einsum("ij,kj->ik", normals, factor)
     return np.asarray([transform(x) for x in samples])
 
 

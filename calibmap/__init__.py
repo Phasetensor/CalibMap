@@ -23,17 +23,25 @@ class Record:
     stderr: Optional[float] = None
     sample_size: Optional[int] = None
 
+    protocol: Optional[str] = None
+
+    def identity(self, unit: str) -> tuple:
+        key = (self.backend, self.metric, self.qubits, self.gate, unit, self.source, self.kind)
+        return key if self.protocol is None else (*key, self.protocol)
+
     def __post_init__(self) -> None:
-        if not all((self.backend, self.metric, self.source, self.unit)):
+        if not all(isinstance(v, str) and v.strip() for v in (self.backend, self.metric, self.source, self.unit)):
             raise ValueError("Backend, metric, source and unit are required")
-        if self.kind not in {"measured", "provider_estimate", "simulated"}:
+        if self.kind not in {"measured", "provider_estimate", "simulated", "synthetic"}:
             raise ValueError("Unknown evidence kind")
-        if len(set(self.qubits)) != len(self.qubits) or any(
+        if not isinstance(self.qubits, tuple) or len(set(self.qubits)) != len(self.qubits) or any(
             type(q) is not int or q < 0 for q in self.qubits
         ):
             raise ValueError("Expected distinct nonnegative physical qubits")
+        if not all(isinstance(v, datetime) for v in (self.acquired, self.calibrated)):
+            raise ValueError("Calibration and acquisition timestamps required")
         for timestamp in (self.calibrated, self.acquired, self.published):
-            if timestamp is not None and timestamp.utcoffset() is None:
+            if timestamp is not None and (not isinstance(timestamp, datetime) or timestamp.utcoffset() is None):
                 raise ValueError("Expected timezone-aware timestamp")
         if self.value is not None and not isfinite(self.value):
             raise ValueError("Expected finite value or missing observation")
@@ -49,12 +57,14 @@ def as_of(records: Iterable[Record], at: datetime) -> Tuple[Record, ...]:
     """Return latest observations available to the collector by the cutoff."""
     if at.utcoffset() is None:
         raise ValueError("Expected timezone-aware cutoff")
+    from .records import normalize
+
     latest = {}
     for row in records:
         available = max(row.calibrated, row.acquired, row.published or row.acquired)
         if available > at:
             continue
-        key = (row.backend, row.metric, row.qubits, row.gate, row.unit, row.source, row.kind)
+        key = row.identity(normalize(row).unit)
         rank = (row.calibrated, available, row.acquired)
         if key not in latest or rank > latest[key][0]:
             latest[key] = (rank, {row})

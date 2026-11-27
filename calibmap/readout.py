@@ -45,8 +45,9 @@ class Binary:
 
 def delta(jacobian: np.ndarray, covariance: np.ndarray) -> np.ndarray:
     j, c = np.atleast_2d(jacobian), np.atleast_2d(covariance)
-    if c.shape != (j.shape[1], j.shape[1]) or not all(np.isfinite(x).all() for x in (j,c)):
+    if j.ndim != 2 or not j.size or c.shape != (j.shape[1], j.shape[1]) or not all(np.isfinite(x).all() for x in (j,c)):
         raise ValueError("Incompatible finite Jacobian and covariance required")
-    if not np.allclose(c,c.T) or np.linalg.eigvalsh(c).min() < -1e-12:
+    tolerance = 16 * np.finfo(float).eps * len(c) * np.max(np.abs(c))
+    if np.max(np.abs(c - c.T)) > tolerance or np.linalg.eigvalsh(c).min() < -tolerance:
         raise ValueError("Covariance must be positive semidefinite and symmetric")
     return j @ c @ j.T

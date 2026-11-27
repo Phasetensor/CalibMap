@@ -6,6 +6,7 @@ jobs:
   validation:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python: ['3.11', '3.12']
     steps:
@@ -13,14 +14,37 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - name: Check public distribution index
-        run: |
-          status=$(curl -sS -o /dev/null -w '%{http_code}' https://pypi.org/pypi/calibmap/json)
-          echo "PyPI calibmap HTTP $status" >> "$GITHUB_STEP_SUMMARY"
-          test "$status" = 404
-      - run: python -m pip install numpy scipy pytest coverage ruff mypy shotweave==0.2.0 bornlens==0.3.1
+      - run: python -m pip install '.[interop]' pytest coverage
       - run: coverage run --branch --source=calibmap -m pytest && coverage json
       - run: PYTHONPATH=. python benchmarks/interoperability.py
       - run: python scripts/coverage_gate.py
-      - run: ruff check . && ruff format --check .
-      - run: mypy --ignore-missing-imports calibmap
+  static:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        command: ['ruff check .', 'ruff format --check --diff .', 'mypy --ignore-missing-imports calibmap']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install . ruff mypy
+      - run: ${{ matrix.command }}
+  packaging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install build twine
+      - run: python -m build && twine check --strict dist/*
+      - name: Install both artifacts outside the checkout
+        run: |
+          for file in "$PWD"/dist/*; do
+            target=$(mktemp -d)
+            python -m venv "$target/env"
+            "$target/env/bin/pip" install "$file"
+            (cd "$target" && env/bin/python -I -c 'from calibmap.readout import Binary; assert Binary(0,0).invert(.25) == (.25,1)')
+          done

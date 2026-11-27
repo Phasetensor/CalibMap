@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "calibmap"
+version = "0.1.0.dev0"
+description = "Offline quantum calibration analytics and hardware stability diagnostics"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+dependencies = ["numpy>=1.23", "scipy>=1.9"]
+
+[project.urls]
+Repository = "https://github.com/Phasetensor/CalibMap"
+
+[project.optional-dependencies]
+ibm = ["qiskit-ibm-runtime"]
+interop = ["shotweave==0.2.0", "bornlens==0.3.1"]
+
+[tool.setuptools]
+packages = ["calibmap"]
+
+[tool.setuptools.package-data]
+calibmap = ["py.typed"]

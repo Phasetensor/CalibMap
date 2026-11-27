@@ -17,9 +17,9 @@ def timelines(records: Iterable[Record], at: datetime) -> dict[tuple,tuple[Recor
         r=normalize(item)
         if max(r.calibrated,r.acquired,r.published or r.acquired)>at:
             continue
-        key=(r.backend,r.metric,r.qubits,r.gate,r.unit,r.source,r.kind)
+        key=r.identity(r.unit)
         groups.setdefault(key,set()).add(r)
-    return {k:tuple(sorted(v,key=lambda r:(r.calibrated,r.acquired,r.published or r.acquired,repr(r)))) for k,v in groups.items()}
+    return {k:tuple(sorted(v,key=lambda r:(r.calibrated,max(r.acquired,r.published or r.acquired),r.acquired,repr(r)))) for k,v in groups.items()}
 
 
 def stability(records: Iterable[Record], at: datetime, window: timedelta, gap: timedelta) -> dict:

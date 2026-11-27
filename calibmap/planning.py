@@ -69,7 +69,19 @@ def readiness(records: Iterable[Record], at: datetime, max_age: timedelta,
     """Keys are (backend, metric, qubits, gate, unit, source, kind)."""
     if max_age<timedelta() or not upper_bounds or not np.isfinite(list(upper_bounds.values())).all():
         raise ValueError("Explicit criteria and nonnegative maximum age required")
-    latest={(r.backend,r.metric,r.qubits,r.gate,r.unit,r.source,r.kind):r for r in as_of(records,at)}
+    from .records import normalize
+    latest = {}
+    for row in as_of(records, at):
+        canonical = normalize(row)
+        for key in upper_bounds:
+            if row.identity(key[4]) != key:
+                continue
+            probe = normalize(Record(row.backend,row.metric,row.qubits,row.calibrated,row.acquired,
+                                     row.published,1.0,key[4],row.source,row.kind))
+            if probe.unit == canonical.unit and probe.value is not None:
+                from dataclasses import replace
+                latest[key] = replace(canonical, value=None if canonical.value is None else canonical.value / probe.value,
+                                      unit=key[4])
     outcomes={}
     for key,limit in upper_bounds.items():
         row=latest.get(key)
