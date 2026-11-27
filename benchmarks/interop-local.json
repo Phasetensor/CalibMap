@@ -9,6 +9,11 @@
     4314,
     5686
   ],
+  "calibration_shots": 12000,
+  "pilot_shots": 0,
+  "confirmatory_shots": 20000,
+  "planning_variance": 0.0001605563509489431,
+  "equal_allocation_variance": 0.00016357747679424589,
   "calibration": [
     {
       "qubit": 0,

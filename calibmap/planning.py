@@ -170,7 +170,9 @@ def readiness(
     return state, outcomes
 
 
-def multinomial_mc(counts: np.ndarray, probabilities: np.ndarray, draws: int, seed: int) -> dict:
+def multinomial_mc(
+    counts: np.ndarray, probabilities: np.ndarray, draws: int, seed: int
+) -> dict:
     """Plus-one Monte Carlo test with a prespecified fixed multinomial null."""
     result = goodness(counts, probabilities)
     if type(draws) is not int or draws < 1:
@@ -185,5 +187,7 @@ def multinomial_mc(counts: np.ndarray, probabilities: np.ndarray, draws: int, se
     expected = n * p[mask]
     sim = np.random.default_rng(seed).multinomial(n, p, size=draws)[:, mask]
     simulated_stat = np.sum((sim - expected) ** 2 / expected, axis=1)
-    result["mc_p"] = (1 + int(np.sum(simulated_stat >= result["statistic"]))) / (1 + draws)
+    result["mc_p"] = (1 + int(np.sum(simulated_stat >= result["statistic"]))) / (
+        1 + draws
+    )
     return result

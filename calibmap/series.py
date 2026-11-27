@@ -136,5 +136,10 @@ def decay_diagnostics(times: np.ndarray, values: np.ndarray) -> dict:
         inverse = np.linalg.pinv(jac)
         variance = float(residual @ residual / (len(t) - 3))
         stderr = np.sqrt(np.sum(inverse**2, axis=1) * variance).tolist()
-    return {"parameters": (a, tau, b), "residuals": residual.tolist(), "stderr": stderr,
-            "scaled_condition": condition, "locally_identifiable": identifiable}
+    return {
+        "parameters": (a, tau, b),
+        "residuals": residual.tolist(),
+        "stderr": stderr,
+        "scaled_condition": condition,
+        "locally_identifiable": identifiable,
+    }

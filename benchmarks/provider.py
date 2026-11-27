@@ -12,4 +12,6 @@ acquired = datetime.now(timezone.utc)
 rows = ibm_properties(props, acquired)
 assert rows and all(r.published is None and r.acquired == acquired for r in rows)
 assert load(export(rows)) == rows
-print(version("qiskit-ibm-runtime"), props.backend_name, len(rows), acquired.isoformat())
+print(
+    version("qiskit-ibm-runtime"), props.backend_name, len(rows), acquired.isoformat()
+)
