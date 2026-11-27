@@ -168,3 +168,22 @@ def readiness(
         else "READY"
     )
     return state, outcomes
+
+
+def multinomial_mc(counts: np.ndarray, probabilities: np.ndarray, draws: int, seed: int) -> dict:
+    """Plus-one Monte Carlo test with a prespecified fixed multinomial null."""
+    result = goodness(counts, probabilities)
+    if type(draws) is not int or draws < 1:
+        raise ValueError("Positive replicate count required")
+    p = np.asarray(probabilities, dtype=float)
+    n = int(np.sum(counts))
+    result["total_variation"] = float(np.sum(abs(np.asarray(counts) / n - p)) / 2)
+    if result["impossible"]:
+        result["mc_p"] = 0.0
+        return result
+    mask = p > 0
+    expected = n * p[mask]
+    sim = np.random.default_rng(seed).multinomial(n, p, size=draws)[:, mask]
+    simulated_stat = np.sum((sim - expected) ** 2 / expected, axis=1)
+    result["mc_p"] = (1 + int(np.sum(simulated_stat >= result["statistic"]))) / (1 + draws)
+    return result

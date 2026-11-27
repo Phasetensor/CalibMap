@@ -55,3 +55,12 @@ jobs:
             "$target/env/bin/pip" install "$file"
             (cd "$target" && env/bin/python -I -c 'from calibmap.readout import Binary; assert Binary(0,0).invert(.25) == (.25,1)')
           done
+  provider:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install '.[ibm]'
+      - run: python benchmarks/provider.py

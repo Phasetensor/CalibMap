@@ -119,3 +119,22 @@ def correlation(
         "pearson": float(pearsonr(x, y)[0]),
         "spearman": float(spearmanr(x, y)[0]),
     }
+
+
+def decay_diagnostics(times: np.ndarray, values: np.ndarray) -> dict:
+    """OLS residuals and local uncertainty for iid Gaussian, equal-variance errors."""
+    a, tau, b = decay(times, values)
+    t = np.asarray(times)
+    exponential = np.exp(-t / tau)
+    residual = np.asarray(values) - (a * exponential + b)
+    jac = np.column_stack((exponential, a * exponential * t / tau**2, np.ones(len(t))))
+    norms = np.linalg.norm(jac, axis=0)
+    condition = float(np.linalg.cond(jac / np.where(norms > 0, norms, 1)))
+    identifiable = bool(condition < 1e6 and np.all(norms > 0))
+    stderr = None
+    if identifiable:
+        inverse = np.linalg.pinv(jac)
+        variance = float(residual @ residual / (len(t) - 3))
+        stderr = np.sqrt(np.sum(inverse**2, axis=1) * variance).tolist()
+    return {"parameters": (a, tau, b), "residuals": residual.tolist(), "stderr": stderr,
+            "scaled_condition": condition, "locally_identifiable": identifiable}
