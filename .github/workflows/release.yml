@@ -1,5 +1,9 @@
 name: Publish approved release
 on:
+  workflow_run:
+    workflows: [Scientific validation]
+    branches: [main]
+    types: [completed]
   workflow_dispatch:
     inputs:
       tag:
@@ -11,10 +15,10 @@ permissions:
   contents: read
 jobs:
   prepare:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.display_title == 'Release CalibMap 0.1.0'))
     runs-on: ubuntu-latest
     env:
-      TAG: ${{ inputs.tag }}
+      TAG: ${{ inputs.tag || 'v0.1.0' }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +30,11 @@ jobs:
       - name: Verify approved ref and successful validation
         run: |
           [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          test "$(git rev-list -n1 "$TAG")" = "$GITHUB_SHA"
+          if [[ "$GITHUB_EVENT_NAME" == workflow_run ]]; then
+            test "$(jq -r .workflow_run.head_sha "$GITHUB_EVENT_PATH")" = "$GITHUB_SHA"
+          else
+            test "$(git rev-list -n1 "$TAG")" = "$GITHUB_SHA"
+          fi
           state=$(gh run list --workflow validation.yml --commit "$GITHUB_SHA" --branch main --limit 1 --json conclusion --jq '.[0].conclusion')
           test "$state" = success
       - run: python -m pip install build twine packaging
@@ -59,13 +67,21 @@ jobs:
         with:
           name: approved-distributions
           path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
-      - name: Publish matching GitHub assets and verify public archives
+      - name: Create approved GitHub release
         env:
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ inputs.tag || 'v0.1.0' }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" dist/* --target "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" --generate-notes
+          fi
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq .object.sha)" = "$GITHUB_SHA"
+      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Verify public archives
+        env:
+          TAG: ${{ inputs.tag || 'v0.1.0' }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir github-dist
           python - <<'PY'
           import hashlib, json, os, urllib.request

@@ -51,7 +51,7 @@ class Report:
     ) -> Report:
         rows = tuple(records)
         data = {
-            "version": "0.1.0rc1",
+            "version": "0.1.0",
             "backends": sorted({r.backend for r in rows}),
             "records": [encode(r) for r in rows],
             "input_sha256": fingerprint(rows),

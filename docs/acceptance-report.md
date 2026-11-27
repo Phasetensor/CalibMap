@@ -6,6 +6,6 @@ The principal API benchmark reproduced the original seeded false-alarm rate (0.0
 
 Correlated-parameter readout variance was 4.9870e-6 by linearization and 4.9396e-6 in 10,000 Gaussian replicates. Under this specified covariance the cross terms reduce variance relative to conditioning on the calibration. This direction need not hold for a different covariance.
 
-See the traceability matrix for individual scope limits. Local fit conditioning, scaled Jacobians and residuals now accompany decay estimates. A real IBM Runtime provider object passed the offline adapter test with 101 records. Sensitivity beyond the documented benchmark regimes remains a scientific limitation. The current development package is not approved for publication.
+See the traceability matrix for individual scope limits. Local fit conditioning, scaled Jacobians and residuals now accompany decay estimates. A real IBM Runtime provider object passed the offline adapter test with 101 records. Sensitivity beyond the documented benchmark regimes remains a scientific limitation. The project owner approved version 0.1.0 for publication following the passing release-candidate gates.
 
 Two correlated metrics under prespecified Gaussian reference parameters produced 417 familywise alarms in 10,000 trajectories. Using a reference mean and variance estimated from 12 external observations gave 1,546 alarms in 10,000 trajectories. The latter result is a counterexample to treating plug-in reference estimates as known parameters.
