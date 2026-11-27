@@ -19,3 +19,7 @@ All numerical evidence here comes from offline data. A reference test verifies t
 | Forecast | planning.forecast | Walk-forward comparisons with last, rolling mean and smoothing | Future-observation interval assumes specified process and observation variances |
 | Readiness | experiment.evaluate, planning.readiness | Criterion provenance, failed/unknown precedence, stale and conflicting records | Supplied topology and alarms must be available at decision time |
 | Reports | reporting.Report | JSON/CSV equivalence, escaping, undefined values and deterministic construction | Caller supplies results, metric definitions and assumptions |
+
+### Consolidation evidence
+
+The IBM provider integration ran on the real Runtime object for the bundled Athens snapshot. gate_changes compares snapshots for matched directed gates. joint_inverse accepts an explicitly supplied joint assignment. Tests compare correlated inversion with a known joint distribution, graph distances with exhaustive path enumeration, sparse goodness-of-fit with an exact binomial test, and covariance propagation with central differences. The temporal property test uses Hypothesis. Scientific scripts and additional reference tests live under benchmarks/ and tests/test_references.py respectively.

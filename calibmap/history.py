@@ -71,3 +71,21 @@ def stability(
             "statistics": describe(np.asarray(values)) if len(values) >= 2 else None,
         }
     return result
+
+
+def gate_changes(records: Iterable[Record], earlier: datetime, later: datetime) -> tuple[dict, ...]:
+    """Compare matched ordered gates across as-of epochs in canonical units."""
+    from . import as_of
+
+    if later < earlier:
+        raise ValueError("Reversed epochs")
+    rows = tuple(normalize(r) for r in records if r.gate is not None)
+    before, after = ({r.identity(r.unit): r for r in as_of(rows, t)} for t in (earlier, later))
+    comparisons = []
+    for key in sorted(before.keys() | after.keys(), key=repr):
+        left, right = before.get(key), after.get(key)
+        change = None
+        if left and right and left.value is not None and right.value is not None:
+            change = right.value - left.value
+        comparisons.append({"key": key, "earlier": left, "later": right, "difference": change})
+    return tuple(comparisons)

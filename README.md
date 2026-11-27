@@ -19,3 +19,5 @@ See [scientific design](docs/methodology.md) and [benchmark results](benchmarks/
 ## Evidence and installation
 
 The development package builds with python -m build. Install the optional interop extra for the integrated example or the ibm extra for IBM Runtime property objects. The public API and limits are indexed in [the module matrix](docs/traceability.md). [Reproduction instructions](docs/advanced.md) cover the three case studies and figures. The scientific-studies artifact in Actions contains the generated figures and numerical results from the same run.
+
+The [API guide](docs/api.md) lists input and output contracts by module. Python 3.11–3.14 have been exercised in CI. IBM Runtime and interoperation workflows are tested separately on the environments recorded in the validation workflow.

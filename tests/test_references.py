@@ -52,3 +52,33 @@ def test_noisy_decay():
     assert r["locally_identifiable"] and abs(r["parameters"][1] - 1.2) < 0.04
     assert 0 < r["stderr"][1] < 0.03
     assert np.mean(r["residuals"]) == pytest.approx(0, abs=1e-7)
+
+
+def test_joint_correlated_assignment():
+    from calibmap.readout import joint_inverse
+
+    # Random joint bit flip preserves parity, unlike independent marginal flips.
+    a = 0.9 * np.eye(4) + 0.1 * np.eye(4)[::-1]
+    prepared = np.array([0.7, 0.1, 0.1, 0.1])
+    assert joint_inverse(a, a @ prepared) == pytest.approx(prepared)
+    for matrix, obs in ((a, [1]), (a, [-1, 0, 0, 2]), (a / 2, prepared), (np.ones((4, 4)) / 4, prepared)):
+        with pytest.raises(ValueError):
+            joint_inverse(matrix, obs)
+
+
+def test_gate_changes_preserve_direction_and_protocol():
+    from dataclasses import replace
+    from datetime import timedelta
+
+    from calibmap.history import gate_changes
+    from test_history import HistoryTests
+
+    a = replace(HistoryTests.row, gate="cx", qubits=(1, 0), protocol="RB")
+    later = a.acquired + timedelta(days=1)
+    b = replace(a, calibrated=later, acquired=later, value=22)
+    c = replace(b, qubits=(0, 1), protocol="other")
+    result = gate_changes([a, b, c], a.acquired, later)
+    assert {r["key"][-1] for r in result} == {"RB", "other"}
+    assert [r["difference"] for r in result if r["earlier"]] == pytest.approx([2e-6])
+    with pytest.raises(ValueError):
+        gate_changes([], later, a.acquired)
