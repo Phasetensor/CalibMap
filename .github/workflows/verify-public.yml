@@ -1,0 +1,46 @@
+name: Verify public distributions
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [.github/workflows/verify-public.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: gh release download v0.1.0 -R "$GITHUB_REPOSITORY" --dir github-dist
+      - name: Verify public files against the approved build
+        run: |
+          python - <<'PY'
+          import hashlib,json,time,urllib.request
+          from pathlib import Path
+          expected = {
+              "calibmap-0.1.0-py3-none-any.whl":"18a2fdd05388833f735b61576ec8de13cba8e5ad76f180a1c4b2b9e553145722",
+              "calibmap-0.1.0.tar.gz":"ffe0e64b3df72c258226709a0e30928b92a5ef140316a96a6110ab150ada85ee",
+          }
+          for attempt in range(12):
+              assets = json.load(urllib.request.urlopen("https://pypi.org/pypi/calibmap/0.1.0/json?verify="+str(attempt),timeout=30))["urls"]
+              if {a["filename"] for a in assets} == set(expected):
+                  break
+              time.sleep(5)
+          assert {a["filename"] for a in assets} == set(expected)
+          for a in assets:
+              n=a["filename"]
+              gh=hashlib.sha256(Path("github-dist",n).read_bytes()).hexdigest()
+              public=hashlib.sha256(urllib.request.urlopen(a["url"],timeout=30).read()).hexdigest()
+              assert gh == public == expected[n] == a["digests"]["sha256"], n
+              print(n, public)
+          PY
+      - name: Install from PyPI outside the repository
+        run: |
+          cd "$(mktemp -d)"
+          python -m venv env
+          env/bin/pip install --index-url https://pypi.org/simple 'calibmap==0.1.0'
+          env/bin/python -I -c 'from importlib.metadata import version; from calibmap.readout import Binary; assert version("calibmap") == "0.1.0"; assert Binary(0,0).invert(.25) == (.25,1)'
