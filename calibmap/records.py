@@ -84,7 +84,9 @@ class ProviderProperties(Protocol):
 
 
 def ibm_properties(
-    properties: ProviderProperties, acquired: datetime, published: datetime | None = None
+    properties: ProviderProperties,
+    acquired: datetime,
+    published: datetime | None = None,
 ) -> tuple[Record, ...]:
     """Accept Runtime BackendProperties. The caller supplies actual availability evidence."""
     raw = properties.to_dict()
