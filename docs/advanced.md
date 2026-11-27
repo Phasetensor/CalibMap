@@ -27,3 +27,7 @@ decay_diagnostics uses a residual variance estimate and the local Jacobian of a 
 multinomial_mc simulates the prespecified multinomial null, using a plus-one tail estimate for sparse cells. Its p-value is conditional on the supplied model. Parameter estimation and held-out assessment should use independent observations.
 
 The sensitivity study (benchmarks/sensitivity.py) monitors two correlated Gaussian metrics with shared alpha, then repeats monitoring with a short independently estimated reference, which is heuristic. Its forecast experiments use independent trajectories with irregular observation times and known ground truth. Forecast horizons of 1, 3 and 8 are scored under correct and misspecified variance rates. The checked-in JSON includes Monte Carlo standard errors for coverage.
+
+## Artifact provenance
+
+Development distributions come from the packaging job. Its SHA256SUMS was calculated before the clean wheel and source installation checks. Rebuilding an sdist at another time can change archive timestamps. Use the retained files when comparing digests. Public release digests become available only after the approved stable publication.

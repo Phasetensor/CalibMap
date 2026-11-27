@@ -1,12 +1,12 @@
 from dataclasses import replace
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest import TestCase
 
 from calibmap import Record, as_of
 
 
 class HistoryTests(TestCase):
-    now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    now = datetime(2026, 1, 1, tzinfo=UTC)
     row = Record(
         "fixture", "T1", (0,), now, now, None, 20, "us", "fixture", "simulated"
     )

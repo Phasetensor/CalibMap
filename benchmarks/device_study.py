@@ -1,6 +1,7 @@
 """Seeded offline device diagnostics. All measurements in this study are synthetic."""
 
-from datetime import datetime, timedelta, timezone
+import itertools
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,7 +19,7 @@ rng = np.random.default_rng(138)
 t = np.cumsum(rng.integers(1, 4, 40))
 x = rng.normal(0, 1, len(t))
 x[20:] += 4
-base = datetime(2025, 1, 1, tzinfo=timezone.utc)
+base = datetime(2025, 1, 1, tzinfo=UTC)
 rows = []
 for i, (dt, y) in enumerate(zip(t, x)):
     stamp = base + timedelta(hours=int(dt))
@@ -85,7 +86,7 @@ for u, v in edges:
         xytext=positions[u],
         arrowprops={
             "arrowstyle": "->",
-            "color": "green" if (u, v) in zip(path, path[1:]) else "gray",
+            "color": "green" if (u, v) in itertools.pairwise(path) else "gray",
         },
     )
 for i, (xx, yy) in enumerate(positions):

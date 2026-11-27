@@ -77,7 +77,9 @@ def components(
     return tuple(result)
 
 
-def candidates(nodes: Iterable[int], edges: Iterable[tuple[int, int]], size: int):
+def candidates(
+    nodes: Iterable[int], edges: Iterable[tuple[int, int]], size: int
+) -> Iterable[tuple[int, ...]]:
     """Enumerate weakly connected subsets. Intended for small device regions."""
     physical = tuple(sorted(set(nodes)))
     links = tuple(edges)

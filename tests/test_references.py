@@ -1,4 +1,4 @@
-from itertools import permutations
+from itertools import pairwise, permutations
 
 import numpy as np
 import pytest
@@ -34,7 +34,7 @@ def test_paths_against_all_simple_paths():
         for n in range(3):
             for via in permutations([1, 2], n):
                 path = (0, *via, 3)
-                links = list(zip(path, path[1:]))
+                links = list(pairwise(path))
                 if all(link in edges for link in links):
                     costs.append(sum(edges[link] for link in links))
         if costs:
@@ -75,8 +75,9 @@ def test_gate_changes_preserve_direction_and_protocol():
     from dataclasses import replace
     from datetime import timedelta
 
-    from calibmap.history import gate_changes
     from test_history import HistoryTests
+
+    from calibmap.history import gate_changes
 
     a = replace(HistoryTests.row, gate="cx", qubits=(1, 0), protocol="RB")
     later = a.acquired + timedelta(days=1)

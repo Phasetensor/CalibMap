@@ -10,6 +10,7 @@ import json
 from collections.abc import Iterable
 from dataclasses import asdict, replace
 from datetime import datetime
+from typing import Protocol
 
 from . import Record
 
@@ -40,7 +41,7 @@ def decode(data: dict) -> Record:
     fields["qubits"] = tuple(fields["qubits"])
     for key in ("calibrated", "acquired", "published"):
         if fields.get(key) is not None:
-            fields[key] = datetime.fromisoformat(fields[key].replace("Z", "+00:00"))
+            fields[key] = datetime.fromisoformat(fields[key])
     return Record(**fields)
 
 
@@ -78,8 +79,12 @@ def fingerprint(records: Iterable[Record]) -> str:
     return hashlib.sha256(export(records).encode()).hexdigest()
 
 
+class ProviderProperties(Protocol):
+    def to_dict(self) -> dict: ...
+
+
 def ibm_properties(
-    properties, acquired: datetime, published=None
+    properties: ProviderProperties, acquired: datetime, published: datetime | None = None
 ) -> tuple[Record, ...]:
     """Accept Runtime BackendProperties. The caller supplies actual availability evidence."""
     raw = properties.to_dict()
@@ -88,7 +93,7 @@ def ibm_properties(
     def append(param, qubits, gate):
         stamp = param["date"]
         if isinstance(stamp, str):
-            stamp = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+            stamp = datetime.fromisoformat(stamp)
         rows.append(
             normalize(
                 Record(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 
@@ -66,7 +67,7 @@ def stability(
             "epochs": len(epochs),
             "missing": sum(r.value is None for r in selected.values()),
             "age_seconds": (at - rows[-1].calibrated).total_seconds(),
-            "gaps": [(a, b) for a, b in zip(epochs, epochs[1:]) if b - a > gap],
+            "gaps": [(a, b) for a, b in itertools.pairwise(epochs) if b - a > gap],
             "standard_errors": [r.stderr for r in selected.values()],
             "statistics": describe(np.asarray(values)) if len(values) >= 2 else None,
         }
