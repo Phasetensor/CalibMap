@@ -1,0 +1,52 @@
+{
+  "seed": 512,
+  "evidence": "synthetic",
+  "physical_qubits": [
+    0,
+    1
+  ],
+  "allocation": [
+    4314,
+    5686
+  ],
+  "calibration": [
+    {
+      "qubit": 0,
+      "counts": [
+        80,
+        176
+      ],
+      "simultaneous_intervals": [
+        [
+          0.01986843254133326,
+          0.03492456744882955
+        ],
+        [
+          0.048453161586913956,
+          0.07022886961818259
+        ]
+      ]
+    },
+    {
+      "qubit": 1,
+      "counts": [
+        571,
+        347
+      ],
+      "simultaneous_intervals": [
+        [
+          0.17274204366868956,
+          0.20886322654172482
+        ],
+        [
+          0.10150218057644417,
+          0.13099934724821474
+        ]
+      ]
+    }
+  ],
+  "held_out_observed_Z": [
+    "within_tolerance",
+    "within_tolerance"
+  ]
+}

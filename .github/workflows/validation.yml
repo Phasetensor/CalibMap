@@ -1,0 +1,26 @@
+name: Scientific validation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Check public distribution index
+        run: |
+          status=$(curl -sS -o /dev/null -w '%{http_code}' https://pypi.org/pypi/calibmap/json)
+          echo "PyPI calibmap HTTP $status" >> "$GITHUB_STEP_SUMMARY"
+          test "$status" = 404
+      - run: python -m pip install numpy scipy pytest coverage ruff mypy shotweave==0.2.0 bornlens==0.3.1
+      - run: coverage run --branch --source=calibmap -m pytest && coverage json
+      - run: PYTHONPATH=. python benchmarks/interoperability.py
+      - run: python scripts/coverage_gate.py
+      - run: ruff check . && ruff format --check .
+      - run: mypy --ignore-missing-imports calibmap

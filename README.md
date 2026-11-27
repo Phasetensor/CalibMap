@@ -1,2 +1,17 @@
 # CalibMap
-Quantum calibration analytics and hardware stability
+
+Offline quantum calibration analytics for PhaseTensor. Development branch. Use timezone-aware calibration, acquisition and publication timestamps to reconstruct historical evidence. Keep provider estimates, synthetic experiments and acquired measurements identifiable throughout analysis.
+
+## Running the examples
+
+With NumPy, SciPy and pytest installed, run the following from the checkout.
+
+    python -m pytest
+    PYTHONPATH=. python benchmarks/principal.py
+    PYTHONPATH=. python benchmarks/interoperability.py
+
+The interoperability example also needs ShotWeave 0.2.0 and BornLens 0.3.1. It uses independent random calibration and confirmatory draws, fixed physical qubit ordering and a 10,000-shot design budget. The examples incur no hardware charges.
+
+## Methods
+
+See [scientific design](docs/methodology.md) and [benchmark results](benchmarks/principal.json). Assignment matrices use observed rows and prepared columns. Converting a measured frequency back to prepared probability requires directional calibration and a well-conditioned matrix. The Gaussian monitoring thresholds require a prespecified mean and variance. Offline segmentation uses future observations and supports retrospective analysis only.

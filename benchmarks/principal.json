@@ -1,0 +1,23 @@
+{
+  "seed": 4701,
+  "replications": 10000,
+  "false_alarm": {
+    "rate": 0.053,
+    "monte_carlo_se": 0.0022403347964087867
+  },
+  "power": {
+    "rate": 1.0,
+    "monte_carlo_se": 0.0
+  },
+  "conditional_delay_mean": 0.9908,
+  "readout_coverage": {
+    "rate": 0.9592,
+    "monte_carlo_se": 0.0019782659073036657
+  },
+  "readout_rmse": 0.029715820702110856,
+  "readout_bias": -0.00013500000000000382,
+  "exact_change_only": 0.925,
+  "segmentation_replications": 200,
+  "seconds": 0.046150000000000024,
+  "peak_rss_bytes": 111607808
+}

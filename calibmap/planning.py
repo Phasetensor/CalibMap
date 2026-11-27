@@ -1,0 +1,86 @@
+"""Calibrated graph, held-out noise diagnostics, forecasting and planning."""
+from __future__ import annotations
+from datetime import datetime, timedelta
+from heapq import heappush, heappop
+from typing import Iterable
+import numpy as np
+from scipy.stats import chi2, norm
+from . import Record, as_of
+from .series import vector
+
+
+def shortest_path(edges: dict[tuple[int,int],float], start: int, end: int) -> tuple[float,tuple[int,...]]:
+    """Costs must share a user-defined additive objective and unit."""
+    neighbors: dict[int,list[tuple[int,float]]] = {}
+    for (a,b),weight in edges.items():
+        if not 0<=weight<np.inf:
+            raise ValueError("Costs must be finite and nonnegative")
+        neighbors.setdefault(a,[]).append((b,weight))
+    queue=[(0.,(start,))]
+    visited=set()
+    while queue:
+        cost,path=heappop(queue)
+        node=path[-1]
+        if node in visited:
+            continue
+        if node==end:
+            return cost,path
+        visited.add(node)
+        for successor,weight in neighbors.get(node,[]):
+            heappush(queue,(cost+weight,path+(successor,)))
+    raise ValueError("Unreachable target")
+
+
+def goodness(counts: np.ndarray, probabilities: np.ndarray) -> dict:
+    """Fixed, externally specified multinomial model. Sparse cells suppress asymptotic p."""
+    x,p=vector(counts,2),vector(probabilities,2)
+    if x.shape!=p.shape or (x<0).any() or (x!=np.floor(x)).any() or x.sum()==0 or (p<0).any() or not np.isclose(p.sum(),1.,rtol=0,atol=1e-12):
+        raise ValueError("Invalid multinomial data")
+    expected=x.sum()*p
+    mask=p>0
+    residual=x-expected
+    impossible=bool(np.any(x[~mask]>0))
+    stat=float('inf') if impossible else float(np.sum(residual[mask]**2/expected[mask]))
+    pv=None
+    if impossible:
+        pv=0.
+    elif mask.sum()>1 and min(expected[mask])>=5:
+        pv=float(chi2.sf(stat,mask.sum()-1))
+    return dict(residual=residual.tolist(),statistic=stat,p_value=pv,impossible=impossible)
+
+
+def forecast(times: np.ndarray, values: np.ndarray, horizon: float, process_rate: float, observation_var: float, alpha: float=.05) -> tuple[float,float,float]:
+    """Local-level model, known variance rates, diffuse initial level at first observation."""
+    t,x=vector(times),vector(values)
+    if t.shape!=x.shape or np.any(np.diff(t)<=0) or not all(np.isfinite([horizon,process_rate,observation_var])) or horizon<=0 or process_rate<0 or observation_var<=0 or not 0<alpha<1:
+        raise ValueError("Invalid time series or model")
+    level,var=x[0],observation_var
+    for dt,y in zip(np.diff(t),x[1:]):
+        var+=process_rate*dt
+        gain=var/(var+observation_var)
+        level+=gain*(y-level)
+        var=(1-gain)*var
+    width=norm.isf(alpha/2)*np.sqrt(var+process_rate*horizon+observation_var)
+    return float(level),float(level-width),float(level+width)
+
+
+def readiness(records: Iterable[Record], at: datetime, max_age: timedelta,
+              upper_bounds: dict[tuple,float]) -> tuple[str,dict]:
+    """Keys are (backend, metric, qubits, gate, unit, source, kind)."""
+    if max_age<timedelta() or not upper_bounds or not np.isfinite(list(upper_bounds.values())).all():
+        raise ValueError("Explicit criteria and nonnegative maximum age required")
+    latest={(r.backend,r.metric,r.qubits,r.gate,r.unit,r.source,r.kind):r for r in as_of(records,at)}
+    outcomes={}
+    for key,limit in upper_bounds.items():
+        row=latest.get(key)
+        if row is None or row.value is None:
+            outcomes[key]="missing evidence"
+        elif at-row.calibrated>max_age:
+            outcomes[key]="stale"
+        elif row.value>limit:
+            outcomes[key]="above threshold"
+        else:
+            outcomes[key]="pass"
+    reasons=set(outcomes.values())
+    state="NOT_READY" if reasons & {"stale","above threshold"} else "UNKNOWN" if "missing evidence" in reasons else "READY"
+    return state,outcomes
