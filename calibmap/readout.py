@@ -71,15 +71,29 @@ def delta(jacobian: np.ndarray, covariance: np.ndarray) -> np.ndarray:
     return j @ c @ j.T
 
 
-def joint_inverse(matrix: np.ndarray, observed: np.ndarray, max_condition: float = 1e6) -> np.ndarray:
+def joint_inverse(
+    matrix: np.ndarray, observed: np.ndarray, max_condition: float = 1e6
+) -> np.ndarray:
     """Invert a supplied full joint assignment on an explicitly ordered outcome basis."""
     a = np.asarray(matrix, dtype=float)
     q = np.asarray(observed, dtype=float)
-    if q.ndim != 1 or len(q) < 2 or len(q) & (len(q) - 1) or a.shape != (len(q), len(q)):
+    if (
+        q.ndim != 1
+        or len(q) < 2
+        or len(q) & (len(q) - 1)
+        or a.shape != (len(q), len(q))
+    ):
         raise ValueError("Expected a square assignment on binary joint outcomes")
-    if not np.isfinite(a).all() or not np.isfinite(q).all() or np.any(a < 0) or np.any(q < 0):
+    if (
+        not np.isfinite(a).all()
+        or not np.isfinite(q).all()
+        or np.any(a < 0)
+        or np.any(q < 0)
+    ):
         raise ValueError("Expected finite nonnegative probabilities")
-    if not np.allclose(a.sum(axis=0), 1, rtol=0, atol=1e-12) or not np.isclose(q.sum(), 1, rtol=0, atol=1e-12):
+    if not np.allclose(a.sum(axis=0), 1, rtol=0, atol=1e-12) or not np.isclose(
+        q.sum(), 1, rtol=0, atol=1e-12
+    ):
         raise ValueError("Columns and observed distribution must each sum to one")
     if not 1 <= max_condition < np.inf or np.linalg.cond(a) > max_condition:
         raise ValueError("Invalid condition bound or ill-conditioned assignment")

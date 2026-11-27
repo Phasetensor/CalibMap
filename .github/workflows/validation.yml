@@ -31,6 +31,12 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install . ruff mypy
       - run: ${{ matrix.command }}
+      - name: Show suggested fixes after a lint or format failure
+        if: failure() && startsWith(matrix.command, 'ruff')
+        run: |
+          ruff check --fix --unsafe-fixes . || true
+          ruff format .
+          git diff --no-color
   packaging:
     runs-on: ubuntu-latest
     steps:
@@ -77,6 +83,7 @@ jobs:
       - run: |
           python benchmarks/principal.py > benchmarks/principal.json
           python benchmarks/scenarios.py > benchmarks/scenarios.json
+          python benchmarks/sensitivity.py > benchmarks/sensitivity.json
           python benchmarks/plot_results.py
           python benchmarks/device_study.py
       - uses: actions/upload-artifact@v4
@@ -86,6 +93,7 @@ jobs:
             benchmarks/*.svg
             benchmarks/principal.json
             benchmarks/scenarios.json
+            benchmarks/sensitivity.json
   newer-python:
     runs-on: ubuntu-latest
     strategy:

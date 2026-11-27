@@ -61,7 +61,12 @@ def test_joint_correlated_assignment():
     a = 0.9 * np.eye(4) + 0.1 * np.eye(4)[::-1]
     prepared = np.array([0.7, 0.1, 0.1, 0.1])
     assert joint_inverse(a, a @ prepared) == pytest.approx(prepared)
-    for matrix, obs in ((a, [1]), (a, [-1, 0, 0, 2]), (a / 2, prepared), (np.ones((4, 4)) / 4, prepared)):
+    for matrix, obs in (
+        (a, [1]),
+        (a, [-1, 0, 0, 2]),
+        (a / 2, prepared),
+        (np.ones((4, 4)) / 4, prepared),
+    ):
         with pytest.raises(ValueError):
             joint_inverse(matrix, obs)
 
