@@ -21,3 +21,11 @@ References: [Runtime properties](https://quantum.cloud.ibm.com/docs/en/api/qiski
 | Forecast | Score predictions made exclusively from earlier observations |
 | Readiness | Explain every missing, stale or failed criterion |
 | Reporting | Identical evidence and parameters produce identical bytes |
+
+## Measurement budgets and uncertainty
+
+The integrated example simulates 3,000 calibrations in each preparation direction on two qubits (12,000 shots). The planning budget is 10,000 per confirmatory sample. Each of the two independent samples uses the same allocation; the total is 32,000 shots with no empirical pilot. ShotWeave receives point estimates. Its conditional variance omits acquisition uncertainty. BornLens compares raw observed Z outcomes with prespecified tolerance 0.12 and per-observable confidence 97.5%.
+
+For contrast d = 1 − e0 − e1 the inverse gradient in observed frequency, e0, e1 order is (1, p−1, p)/d. Joint covariance retains calibration–measurement cross terms. The inverse can lie outside [0,1]. No clipping is applied. Large condition numbers invalidate perturbative interpretation, even before numerical inversion fails.
+
+Under known Gaussian marginal means and variances, per-look two-sided error spending is 6α/(π² m t²) across m prespecified metrics. The union bound controls the probability of any false alarm even when the marginal observations are dependent. Estimating the reference from the monitored sequence invalidates this guarantee. The original benchmark counts a post-change hit regardless of earlier alarms. The scenario benchmark conditions on survival and reports early alarms and misses separately.

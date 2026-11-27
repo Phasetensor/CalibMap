@@ -51,3 +51,5 @@ print(
         indent=2,
     )
 )
+# Each fixed allocation applies separately to two independent confirmatory samples.
+assert sum(allocation) * 2 + len(channels) * 2 * 3000 == 32000
