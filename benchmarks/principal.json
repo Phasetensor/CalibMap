@@ -18,6 +18,6 @@
   "readout_bias": -0.00013500000000000382,
   "exact_change_only": 0.925,
   "segmentation_replications": 200,
-  "seconds": 0.046150000000000024,
-  "peak_rss_bytes": 111607808
+  "seconds": 0.71397975,
+  "peak_rss_bytes": 110788608
 }

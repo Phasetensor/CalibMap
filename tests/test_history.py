@@ -7,11 +7,16 @@ from calibmap import Record, as_of
 
 class HistoryTests(TestCase):
     now = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    row = Record("fixture", "T1", (0,), now, now, None, 20, "us", "fixture", "simulated")
+    row = Record(
+        "fixture", "T1", (0,), now, now, None, 20, "us", "fixture", "simulated"
+    )
 
     def test_cutoff(self):
         future = self.now + timedelta(days=1)
-        self.assertEqual(as_of([self.row, replace(self.row, published=future)], self.now), (self.row,))
+        self.assertEqual(
+            as_of([self.row, replace(self.row, published=future)], self.now),
+            (self.row,),
+        )
 
     def test_conflict(self):
         with self.assertRaises(ValueError):

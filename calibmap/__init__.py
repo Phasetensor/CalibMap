@@ -1,4 +1,5 @@
 """Offline calibration records and publication-aware historical queries."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -26,22 +27,37 @@ class Record:
     protocol: Optional[str] = None
 
     def identity(self, unit: str) -> tuple:
-        key = (self.backend, self.metric, self.qubits, self.gate, unit, self.source, self.kind)
+        key = (
+            self.backend,
+            self.metric,
+            self.qubits,
+            self.gate,
+            unit,
+            self.source,
+            self.kind,
+        )
         return key if self.protocol is None else (*key, self.protocol)
 
     def __post_init__(self) -> None:
-        if not all(isinstance(v, str) and v.strip() for v in (self.backend, self.metric, self.source, self.unit)):
+        if not all(
+            isinstance(v, str) and v.strip()
+            for v in (self.backend, self.metric, self.source, self.unit)
+        ):
             raise ValueError("Backend, metric, source and unit are required")
         if self.kind not in {"measured", "provider_estimate", "simulated", "synthetic"}:
             raise ValueError("Unknown evidence kind")
-        if not isinstance(self.qubits, tuple) or len(set(self.qubits)) != len(self.qubits) or any(
-            type(q) is not int or q < 0 for q in self.qubits
+        if (
+            not isinstance(self.qubits, tuple)
+            or len(set(self.qubits)) != len(self.qubits)
+            or any(type(q) is not int or q < 0 for q in self.qubits)
         ):
             raise ValueError("Expected distinct nonnegative physical qubits")
         if not all(isinstance(v, datetime) for v in (self.acquired, self.calibrated)):
             raise ValueError("Calibration and acquisition timestamps required")
         for timestamp in (self.calibrated, self.acquired, self.published):
-            if timestamp is not None and (not isinstance(timestamp, datetime) or timestamp.utcoffset() is None):
+            if timestamp is not None and (
+                not isinstance(timestamp, datetime) or timestamp.utcoffset() is None
+            ):
                 raise ValueError("Expected timezone-aware timestamp")
         if self.value is not None and not isfinite(self.value):
             raise ValueError("Expected finite value or missing observation")
@@ -59,7 +75,7 @@ def as_of(records: Iterable[Record], at: datetime) -> Tuple[Record, ...]:
         raise ValueError("Expected timezone-aware cutoff")
     from .records import normalize
 
-    latest = {}
+    latest: dict[tuple, tuple[tuple, set[Record]]] = {}
     for row in records:
         available = max(row.calibrated, row.acquired, row.published or row.acquired)
         if available > at:
