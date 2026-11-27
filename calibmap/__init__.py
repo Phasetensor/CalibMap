@@ -86,6 +86,14 @@ def as_of(records: Iterable[Record], at: datetime) -> tuple[Record, ...]:
             latest[key] = (rank, {row})
         elif rank == latest[key][0]:
             latest[key][1].add(row)
-    if any(len(rows) > 1 for _, rows in latest.values()):
-        raise ValueError("Conflicting observations at identical priority")
-    return tuple(next(iter(latest[key][1])) for key in sorted(latest, key=repr))
+    snapshot = []
+    for key in sorted(latest, key=repr):
+        rows = latest[key][1]
+        if len(rows) == 1:
+            snapshot.append(next(iter(rows)))
+            continue
+        equivalents = {normalize(row) for row in rows}
+        if len(equivalents) != 1:
+            raise ValueError("Conflicting observations at identical priority")
+        snapshot.append(equivalents.pop())
+    return tuple(snapshot)

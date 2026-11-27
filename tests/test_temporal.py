@@ -79,3 +79,10 @@ def test_mixed_units_and_protocol():
 def test_invalid_record(updates):
     with pytest.raises(ValueError):
         replace(base, **updates)
+
+
+def test_equivalent_unit_revisions_merge():
+    from calibmap.records import normalize
+
+    canonical = normalize(base)
+    assert as_of([base, canonical], base.acquired) == (canonical,)

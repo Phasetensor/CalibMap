@@ -15,3 +15,7 @@ The interoperability example also needs ShotWeave 0.2.0 and BornLens 0.3.1. It u
 ## Methods
 
 See [scientific design](docs/methodology.md) and [benchmark results](benchmarks/principal.json). Assignment matrices use observed rows and prepared columns. Converting a measured frequency back to prepared probability requires directional calibration and a well-conditioned matrix. The Gaussian monitoring thresholds require a prespecified mean and variance. Offline segmentation uses future observations and supports retrospective analysis only.
+
+## Evidence and installation
+
+The development package builds with python -m build. Install the optional interop extra for the integrated example or the ibm extra for IBM Runtime property objects. The public API and limits are indexed in [the module matrix](docs/traceability.md). [Reproduction instructions](docs/advanced.md) cover the three case studies and figures. The scientific-studies artifact in Actions contains the generated figures and numerical results from the same run.

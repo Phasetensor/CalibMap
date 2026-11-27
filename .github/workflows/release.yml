@@ -1,0 +1,84 @@
+name: Publish approved release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Approved stable release tag on main
+        required: true
+        type: string
+permissions:
+  actions: read
+  contents: read
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify approved ref and successful validation
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test "$(git rev-list -n1 "$TAG")" = "$GITHUB_SHA"
+          state=$(gh run list --workflow validation.yml --commit "$GITHUB_SHA" --branch main --limit 1 --json conclusion --jq '.[0].conclusion')
+          test "$state" = success
+      - run: python -m pip install build twine packaging
+      - run: |
+          python -m build
+          twine check --strict dist/*
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from packaging.utils import parse_sdist_filename, parse_wheel_filename
+          files = sorted(Path("dist").iterdir())
+          assert len(files) == 2
+          for f in files:
+              result = parse_wheel_filename(f.name) if f.suffix == ".whl" else parse_sdist_filename(f.name)
+              assert result[0] == "calibmap" and "v" + str(result[1]) == os.environ["TAG"]
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: approved-distributions
+          path: dist/
+  publish:
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: approved-distributions
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish matching GitHub assets and verify public archives
+        env:
+          TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir github-dist
+          python - <<'PY'
+          import hashlib, json, os, urllib.request
+          from pathlib import Path
+          url = "https://pypi.org/pypi/calibmap/" + os.environ["TAG"][1:] + "/json"
+          assets = json.load(urllib.request.urlopen(url, timeout=30))["urls"]
+          for asset in assets:
+              name = asset["filename"]
+              digest = hashlib.sha256(Path("dist",name).read_bytes()).hexdigest()
+              assert digest == hashlib.sha256(Path("github-dist",name).read_bytes()).hexdigest()
+              assert digest == asset["digests"]["sha256"]
+          assert {a["filename"] for a in assets} == {p.name for p in Path("dist").iterdir()}
+          PY
+          python -m venv /tmp/public-calibmap
+          /tmp/public-calibmap/bin/pip install --index-url https://pypi.org/simple "calibmap==${TAG#v}"
+          (cd /tmp && public-calibmap/bin/python -I -c 'from calibmap.readout import Binary; assert Binary(0,0).invert(.5)==(.5,1)')
